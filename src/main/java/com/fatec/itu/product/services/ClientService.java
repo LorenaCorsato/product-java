@@ -2,8 +2,13 @@ package com.fatec.itu.product.services;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.fatec.itu.product.dtos.ClientRequest;
+import com.fatec.itu.product.dtos.ClientResponse;
 import com.fatec.itu.product.entities.Client;
+import com.fatec.itu.product.mappers.ClientMapper;
 import com.fatec.itu.product.repositories.ClientRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -11,19 +16,22 @@ import jakarta.persistence.EntityNotFoundException;
 @Service 
 public class ClientService {
 
-  private final ClientRepository repository;
+  @Autowired 
+  private ClientRepository repository;
+ 
 
-    ClientService(ClientRepository repository) {
-        this.repository = repository;
+    public List<ClientResponse> findAll(){
+        return repository.findAll()
+                         .stream()
+                         .map(ClientMapper::toDTO)
+                         .toList();
+        
     }
-
-    public List<Client> findAll(){
-        return repository.findAll();
-    }
-
-    public Client findById(Long id) {
+ 
+    public ClientResponse findById(Long id) {
         return repository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException());
+                         .map(ClientMapper::toDTO)
+                         .orElseThrow(() -> new EntityNotFoundException());
     }
 
      public void deleteById(long id) {
@@ -34,22 +42,23 @@ public class ClientService {
     }
 
 
-     public Client save(Client client)
+     public ClientResponse save(ClientRequest client)
     {
-         return repository.save(client);
+        Client c = repository.save(ClientMapper.toEntity(client));
+         return ClientMapper.toDTO(c);
     }
 
-    public void update(Client client, Long id)
+    public void update(ClientRequest client, Long id)
     {
 
         Client c  = repository.findById(id)
                                .orElseThrow(() -> new EntityNotFoundException("Cliente não cadastrado"));
 
         
-        c.setName(client.getName());                                
-        c.setCity(client.getCity());
-        c.setGender(client.getGender());
-        c.setAge(client.getAge());
+        c.setName(client.name());                                
+        c.setCity(client.city());
+        c.setGender(client.gender());
+        c.setAge(client.age());
 
 
         repository.save(c); 
